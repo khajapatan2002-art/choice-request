@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="00e82885-96ec-4491-9a5d-b4bad6677632" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ba4b41e7-7288-4005-b8a1-3e88d56527a9" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="choice-requestFlow" doc:id="c822cbc6-2874-491d-a2f1-af36d958aaef" >
+		<http:listener doc:name="Listener" doc:id="f079e754-853f-46d9-ae5c-326e5ee1e4ed" config-ref="HTTP_Listener_config" path="/choicerequest"/>
+		<logger level="INFO" doc:name="Logger" doc:id="495f824a-6d7c-417f-9611-d5da368412aa" message="start"/>
+		<http:request method="GET" doc:name="Request" doc:id="9821622d-18b5-4dbe-816b-ffd28542e044" config-ref="HTTP_Request_configuration" path="/api/flight"/>
+		<choice doc:name="Choice" doc:id="bcaffde9-ed0a-4c9f-884b-464c766ff387" >
+			<when expression='#[attributes.queryParams.destination == "SFO"]'>
+				<ee:transform doc:name="Transform Message" doc:id="a4a4d870-7591-4016-94cd-c8db3965b68a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.destination == "SFO"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="efb61878-e568-4150-9131-2935d746ca51" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/j
+---
+{
+	"message":"data not found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="c400c813-cde4-4307-a099-836b352c0c06" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
